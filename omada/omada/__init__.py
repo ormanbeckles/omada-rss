@@ -1,2 +1,3 @@
-Add __init__.py to treat omada as module
+Fix __init__.py syntax error
+
 
