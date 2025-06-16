@@ -1,3 +1,4 @@
-Fix __init__.py syntax error
+Make __init__.py truly empty
+
 
 
