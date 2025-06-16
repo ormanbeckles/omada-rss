@@ -1,1 +1,2 @@
-from .omada import Omada
+from omada.controller import OmadaController
+
