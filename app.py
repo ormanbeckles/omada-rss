@@ -1,5 +1,5 @@
 from flask import Flask, Response
-from omada import OmadaController
+from omada.controller import OmadaController
 from feedgen.feed import FeedGenerator
 
 app = Flask(__name__)
