@@ -12,7 +12,6 @@ USERNAME = 'orman@asgardx.com'
 PASSWORD = 'fGss8FWx2K6Fr*uP'
 TARGET_LOCATION = 'Tall Ship'
 
-
 def login():
     headers = {
         "Content-Type": "application/json",
@@ -31,25 +30,25 @@ def login():
         print("🔍 Raw login response text:", response.text)
 
         if response.status_code != 200:
+            print("❌ Non-200 status during login.")
             return None, None
 
         try:
             data = response.json()
         except Exception as e:
             print("❌ Could not parse JSON:", e)
-            print("❌ Login raw response (unparsed):", response.text)
+            print("❌ Raw response:", response.text)
             return None, None
 
         token = data.get('result', {}).get('token')
         cookie = response.cookies.get('TOKEN')
         print("✅ Token:", token)
-        print("✅ TOKEN Cookie:", cookie)
+        print("✅ Cookie:", cookie)
         return token, cookie
 
     except Exception as e:
         print("❌ Exception during login:", e)
         return None, None
-
 
 def get_controller_status(token, cookie, location_name):
     headers = {'Csrf-Token': token}
@@ -59,7 +58,7 @@ def get_controller_status(token, cookie, location_name):
     try:
         response = requests.get(OMADA_API_CONTROLLERS, headers=headers, cookies=cookies)
         print(f"🔄 Controller fetch status: {response.status_code}")
-        print("🔍 Controller response:", response.text)
+        print("🔍 Controller response text:", response.text)
 
         if response.status_code != 200:
             return 'API Error'
@@ -67,7 +66,7 @@ def get_controller_status(token, cookie, location_name):
         try:
             data = response.json()
         except Exception as e:
-            print("❌ JSON parse failed on controller response:", e)
+            print("❌ Failed to parse controller JSON:", e)
             return 'error'
 
         controllers = data.get('result', {}).get('controllers', [])
@@ -76,44 +75,42 @@ def get_controller_status(token, cookie, location_name):
         matched = next((c for c in controllers if c['name'] == location_name), None)
         if matched:
             status = 'online' if matched.get('status') == 1 else 'offline'
-            print(f"🎯 '{location_name}' matched, status:", status)
+            print(f"🎯 Controller '{location_name}' matched: {status}")
             return status
 
-        print(f"⚠️ No controller matched: {location_name}")
+        print(f"⚠️ No controller matched '{location_name}'")
         return 'not found'
 
     except Exception as e:
         print("❌ Exception during controller fetch:", e)
         return 'error'
 
-
-@app.route('/get-asgard-status')
-def get_asgard_status():
-    print("🚦 Handling request: /get-asgard-status")
+@app.route('/get-tall-ship-status')
+def get_tall_ship_status():
+    print("🚦 Handling request: /get-tall-ship-status")
     token, cookie = login()
     if not token or not cookie:
-        print("🚫 Login failed or session missing.")
+        print("🚫 Login failed — no token or cookie.")
         return jsonify({'status': 'error', 'message': 'Login failed'}), 500
 
     status = get_controller_status(token, cookie, TARGET_LOCATION)
     return jsonify({TARGET_LOCATION: status})
 
-
 @app.route('/debug-login-response')
 def debug_login_response():
+    print("🛠️ Debug route: /debug-login-response")
     headers = {
         "Content-Type": "application/json",
         "User-Agent": "Mozilla/5.0"
     }
-
     payload = {"username": USERNAME, "password": PASSWORD}
-
     try:
         response = requests.post(OMADA_API_LOGIN, json=payload, headers=headers)
-        return response.text, response.status_code, {'Content-Type': response.headers.get('Content-Type', 'text/plain')}
+        return response.text, response.status_code, {
+            'Content-Type': response.headers.get('Content-Type', 'text/plain')
+        }
     except Exception as e:
         return f"Login Exception: {e}", 500
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
