@@ -13,35 +13,30 @@ PASSWORD = 'fGss8FWx2K6Fr*uP'
 TARGET_LOCATION = 'Asgard'
 
 def login():
-    response = requests.post(OMADA_API_LOGIN, json={
-        'username': USERNAME,
-        'password': PASSWORD
-    })
-    if response.status_code != 200:
-        return None
-    data = response.json()
-    return data.get('result', {}).get('token')
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0"
+    }
 
-def get_controller_status(token, location_name):
-    headers = {'Csrf-Token': token}
-    cookies = {'TOKEN': token}
-    response = requests.get(OMADA_API_CONTROLLERS, headers=headers, cookies=cookies)
-    if response.status_code != 200:
-        return 'API Error'
-    data = response.json()
-    controllers = data.get('result', {}).get('controllers', [])
-    matched = next((c for c in controllers if c['name'] == location_name), None)
-    if matched:
-        return 'online' if matched.get('status') == 1 else 'offline'
-    return 'offline'
+    payload = {
+        "username": USERNAME,
+        "password": PASSWORD
+    }
 
-@app.route('/get-asgard-status')
-def get_asgard_status():
-    token = login()
-    if not token:
-        return jsonify({'status': 'error', 'message': 'Login failed'})
-    status = get_controller_status(token, TARGET_LOCATION)
-    return jsonify({TARGET_LOCATION: status})
+    print(f"🔐 Attempting login to {OMADA_API_LOGIN}")
+    print(f"🔐 Payload (username only): {{'username': '{USERNAME}', 'password': '***'}}")
+    try:
+        response = requests.post(OMADA_API_LOGIN, json=payload, headers=headers)
+        print(f"🔄 Login response status: {response.status_code}")
 
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=10000)
+        if response.status_code != 200:
+            print("❌ Login failed — Non-200 status")
+            print("❌ Response text:", response.text)
+            return None
+
+        try:
+            data = response.json()
+            print("✅ Login JSON parsed:", data)
+            return data.get('result', {}).get('token')
+        except Exception as e:
+            print("❌ Failed to parse login response as JSON")
