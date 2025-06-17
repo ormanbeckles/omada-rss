@@ -12,6 +12,7 @@ USERNAME = 'orman@asgardx.com'
 PASSWORD = 'fGss8FWx2K6Fr*uP'
 TARGET_LOCATION = 'Asgard'
 
+
 def login():
     headers = {
         "Content-Type": "application/json",
@@ -25,7 +26,7 @@ def login():
 
     print(f"🔐 Attempting login to {OMADA_API_LOGIN}")
     print(f"🔐 Payload: {{'username': '{USERNAME}', 'password': '***'}}")
-    
+
     try:
         response = requests.post(OMADA_API_LOGIN, json=payload, headers=headers)
         print(f"🔄 Login response status: {response.status_code}")
@@ -48,6 +49,7 @@ def login():
     except Exception as e:
         print("❌ Login exception:", e)
         return None
+
 
 def get_controller_status(token, location_name):
     headers = {'Csrf-Token': token}
@@ -85,6 +87,7 @@ def get_controller_status(token, location_name):
         print(f"❌ Exception during controller fetch: {e}")
         return 'error'
 
+
 @app.route('/get-asgard-status')
 def get_asgard_status():
     print("🚦 Handling request: /get-asgard-status")
@@ -92,10 +95,33 @@ def get_asgard_status():
     if not token:
         print("🚫 Login returned no token.")
         return jsonify({'status': 'error', 'message': 'Login failed'})
-    
+
     status = get_controller_status(token, TARGET_LOCATION)
     print(f"📦 Final status returned: {TARGET_LOCATION} → {status}")
     return jsonify({TARGET_LOCATION: status})
+
+
+@app.route('/debug-login-response')
+def debug_login_response():
+    print("🔎 Debug route hit: /debug-login-response")
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0"
+    }
+
+    payload = {
+        "username": USERNAME,
+        "password": PASSWORD
+    }
+
+    try:
+        response = requests.post(OMADA_API_LOGIN, json=payload, headers=headers)
+        print(f"🪵 Login debug status: {response.status_code}")
+        return response.text, response.status_code, {'Content-Type': response.headers.get('Content-Type', 'text/plain')}
+    except Exception as e:
+        print(f"❌ Exception during /debug-login-response: {e}")
+        return f"Login Exception: {e}", 500
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000)
