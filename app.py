@@ -10,7 +10,7 @@ OMADA_API_CONTROLLERS = 'https://use1-api-omada-central.tplinkcloud.com/api/v2/c
 
 USERNAME = 'orman@asgardx.com'
 PASSWORD = 'fGss8FWx2K6Fr*uP'
-TARGET_LOCATION = 'Asgard'
+TARGET_LOCATION = 'Tall Ship'
 
 
 def login():
